@@ -18,6 +18,7 @@ class Nginx < Formula
 
   option 'with-passenger', 'Compile with support for Phusion Passenger module'
   option 'with-webdav', 'Compile with support for WebDAV module'
+  option 'with-module', 'Compile with external 3rd party module'
   option 'with-debug', 'Compile with support for debug log'
 
   option 'with-spdy', 'Compile with support for SPDY module' if build.devel?
@@ -42,6 +43,25 @@ class Nginx < Formula
     exit
   end
 
+  def add_module(mod_arg, acc)
+    parts = mod_arg.split("=")
+    if parts.length != 2 then
+      puts "Unable to parse option #{mod_arg}"
+      exit
+    else
+      return acc << "-add-module=#{part[1]}" if File.directory?(part[1])
+      puts "Unable to locoate module in directory #{part[1]}"
+      exit
+    end
+  end
+
+  def external_module_args(args)
+    mod_args = ARGV.select {|a| a.start_with?('--with-module=')}
+    args unless mod_args.length > 0
+    mod_args.inject(args) {|acc, arg| add_module(arg, acc)}
+  end
+
+
   def install
     args = ["--prefix=#{prefix}",
             "--with-http_ssl_module",
@@ -64,6 +84,7 @@ class Nginx < Formula
 
     args << passenger_config_args if build.include? 'with-passenger'
     args << "--with-http_dav_module" if build.include? 'with-webdav'
+    args << external_module_args(args) if ARGV.include? '--with-module'
     args << "--with-debug" if build.include? 'with-debug'
 
     if build.devel? or build.head?
