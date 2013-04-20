@@ -49,16 +49,18 @@ class Nginx < Formula
       puts "Unable to parse option #{mod_arg}"
       exit
     else
-      return acc << "-add-module=#{part[1]}" if File.directory?(part[1])
-      puts "Unable to locoate module in directory #{part[1]}"
+      return acc << "-add-module=#{parts[1]}" if File.directory?(parts[1])
+      puts "Unable to locoate module in directory #{parts[1]}"
       exit
     end
   end
 
-  def external_module_args(args)
+  def external_module_args
     mod_args = ARGV.select {|a| a.start_with?('--with-module=')}
-    args unless mod_args.length > 0
-    mod_args.inject(args) {|acc, arg| add_module(arg, acc)}
+    if mod_args.length == 0 then
+    else
+      mod_args.inject([]) {|acc, arg| add_module(arg, acc)}
+    end
   end
 
 
@@ -80,11 +82,10 @@ class Nginx < Formula
             "--http-scgi-temp-path=#{var}/run/nginx/scgi_temp",
             "--http-log-path=#{var}/log/nginx",
             "--with-http_gzip_static_module"
-          ]
+          ] | external_module_args
 
     args << passenger_config_args if build.include? 'with-passenger'
     args << "--with-http_dav_module" if build.include? 'with-webdav'
-    args << external_module_args(args) if ARGV.include? '--with-module'
     args << "--with-debug" if build.include? 'with-debug'
 
     if build.devel? or build.head?
