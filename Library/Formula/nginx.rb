@@ -50,7 +50,7 @@ class Nginx < Formula
       exit
     end
     mod_dir = File.expand_path(parts[1])
-    return acc << "-add-module=#{mod_dir}" if File.directory?(mod_dir)
+    return acc << "--add-module=#{mod_dir}" if File.directory?(mod_dir)
     puts "Unable to locoate module in directory #{mod_dir}"
     exit
   end
